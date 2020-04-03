@@ -2,10 +2,14 @@
 
 namespace App\Exceptions;
 
-use App\Http\Requests\UserRequest;
+use Illuminate\Auth\AuthenticationException;
 use Illuminate\Foundation\Exceptions\Handler as ExceptionHandler;
+use Illuminate\Http\JsonResponse;
 use Illuminate\Validation\ValidationException;
 use Throwable;
+use Tymon\JWTAuth\Exceptions\JWTException;
+use Tymon\JWTAuth\Exceptions\TokenExpiredException;
+use Tymon\JWTAuth\Validators\TokenValidator;
 
 class Handler extends ExceptionHandler
 {
@@ -53,9 +57,20 @@ class Handler extends ExceptionHandler
     public function render($request, Throwable $exception)
     {
         if ($request->is('api/*')) {
+            $statusCode = JsonResponse::HTTP_UNPROCESSABLE_ENTITY;
+            $messageError = '';
+            $errors = '';
             if ($exception instanceof ValidationException) {
-                return response()->baseResponseError($exception->getMessage(), $exception->errors());
+                $messageError = $exception->getMessage();
+                $errors = $exception->errors();
+            } elseif ($exception instanceof AuthenticationException) {
+                $messageError = trans('messages.token_invalid');
+                $statusCode = JsonResponse::HTTP_UNAUTHORIZED;
+            } else if ($exception instanceof AuthException){
+                $messageError = $exception->getMessage();
+                $statusCode = $exception->getCode();
             }
+            return response()->baseResponseError($messageError, $errors, $statusCode);
         }
         return parent::render($request, $exception);
     }
