@@ -15,7 +15,6 @@ class AppServiceProvider extends ServiceProvider
      */
     public function register()
     {
-        //
     }
 
     /**
@@ -24,6 +23,16 @@ class AppServiceProvider extends ServiceProvider
      * @return void
      */
     public function boot()
+    {
+        $this->createResponseMacro();
+    }
+
+    /**
+     * Create response macro
+     *
+     * @return void
+     */
+    private function createResponseMacro()
     {
         Response::macro(
             'baseResponse',
@@ -39,10 +48,23 @@ class AppServiceProvider extends ServiceProvider
         );
 
         Response::macro(
+            'baseResponseStatusCreated',
+            function ($data) {
+                return Response::json(
+                    [
+                        'status_code' => JsonResponse::HTTP_CREATED,
+                        'data' => $data,
+                    ],
+                    JsonResponse::HTTP_CREATED
+                );
+            }
+        );
+
+        Response::macro(
             'baseResponseError',
             function (
                 $errorMessage,
-                $errors,
+                $errors = '',
                 $statusCode = JsonResponse::HTTP_UNPROCESSABLE_ENTITY
             ) {
                 return Response::json(
