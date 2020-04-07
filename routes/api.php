@@ -29,7 +29,6 @@ Route::group(['middleware' => ['auth']], function () {
             Route::put('{id}', 'UserController@editUserId')->middleware('checkUser');
 
             Route::delete('{id}', 'UserController@deleteUser')->middleware('checkUser');
-
         }
     );
 

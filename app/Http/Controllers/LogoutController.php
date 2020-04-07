@@ -9,7 +9,7 @@ class LogoutController extends Controller
 
     /**
      * Function logout
-     * 
+     *
      * @return JsonResponse
      */
     public function logout()

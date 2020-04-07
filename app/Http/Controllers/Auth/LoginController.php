@@ -26,6 +26,11 @@ class LoginController extends Controller
 
     use AuthenticatesUsers;
 
+    /**
+     * Function login user
+     *
+     * @return JsonResponse token
+     */
     public function login(UserFormRequest $request)
     {
         $credentials = $request->only('email', 'password');

@@ -12,17 +12,17 @@ use Illuminate\Support\Facades\Hash;
 class RegisterController extends Controller
 {
     /**
-     * Register User
-     * 
-     * @return token
+     * Function register sser
+     *
+     * @return JsonResponse token
      */
     public function registerUser(RegisterFormRequest $request)
     {
         $user = User::create(
             [
-                'email' => $request->only('email'),
-                'password' => Hash::make($request->only('password')),
-                'name' => $request->only('name')
+                'email' => $request->email,
+                'password' => Hash::make($request->password),
+                'name' => $request->name
             ]
         );
         $token = Auth::fromUser($user);

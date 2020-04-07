@@ -66,7 +66,7 @@ class Handler extends ExceptionHandler
             } elseif ($exception instanceof AuthenticationException) {
                 $messageError = trans('messages.token_invalid');
                 $statusCode = JsonResponse::HTTP_UNAUTHORIZED;
-            } else if ($exception instanceof AuthException){
+            } elseif ($exception instanceof AuthException) {
                 $messageError = $exception->getMessage();
                 $statusCode = $exception->getCode();
             }
