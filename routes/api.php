@@ -1,6 +1,5 @@
 <?php
 
-use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 
 /*
@@ -22,9 +21,9 @@ Route::group(['middleware' => ['auth']], function () {
     Route::group(
         ['prefix' => 'user'],
         function () {
-            Route::get('', 'UserController@getUser');
+            Route::get('', 'UserController@getUser')->name('getUser');
 
-            Route::post('', 'UserController@createUser');
+            Route::post('', 'UserController@createUser')->name('createUser');
 
             Route::put('{id}', 'UserController@editUserId')->middleware('checkUser');
 
