@@ -13,9 +13,9 @@ use Illuminate\Support\Facades\Route;
 |
 */
 
-Route::get('login', 'Auth\LoginController@login');
+Route::get('login', 'Auth\LoginController@login')->name('login');
 
-Route::post('register', 'Auth\RegisterController@registerUser');
+Route::post('register', 'Auth\RegisterController@registerUser')->name('registerUser');
 
 Route::group(['middleware' => ['auth']], function () {
     Route::group(
@@ -25,9 +25,9 @@ Route::group(['middleware' => ['auth']], function () {
 
             Route::post('', 'UserController@createUser')->name('createUser');
 
-            Route::put('{id}', 'UserController@editUserId')->middleware('checkUser');
+            Route::put('{id}', 'UserController@editUserId')->middleware('checkUser')->name('editUserId');
 
-            Route::delete('{id}', 'UserController@deleteUser')->middleware('checkUser');
+            Route::delete('{id}', 'UserController@deleteUser')->middleware('checkUser')->name('deleteUser');
         }
     );
 
