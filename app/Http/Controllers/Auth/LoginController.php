@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers\Auth;
 
+use App\Events\LoginUserEvent;
 use App\Exceptions\AuthException;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\UserFormRequest;
@@ -38,6 +39,7 @@ class LoginController extends Controller
         if (!$token) {
             throw new AuthException(JsonResponse::HTTP_UNPROCESSABLE_ENTITY, trans('messages.email_or_password_wrong'));
         }
+        event(new LoginUserEvent(Auth::user()));
         return response()->baseResponseStatusCreated([
             'token' => $token,
             'token_type' => 'Bearer'
