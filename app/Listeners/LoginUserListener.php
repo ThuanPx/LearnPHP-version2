@@ -8,16 +8,6 @@ use Illuminate\Contracts\Queue\ShouldQueue;
 class LoginUserListener implements ShouldQueue
 {
     /**
-     * Create the event listener.
-     *
-     * @return void
-     */
-    public function __construct()
-    {
-        //
-    }
-
-    /**
      * Handle the event.
      *
      * @param  object  $event

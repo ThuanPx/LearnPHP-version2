@@ -39,7 +39,11 @@ class LoginController extends Controller
         if (!$token) {
             throw new AuthException(JsonResponse::HTTP_UNPROCESSABLE_ENTITY, trans('messages.email_or_password_wrong'));
         }
-        event(new LoginUserEvent(Auth::user()));
+        event(
+            new LoginUserEvent(
+                Auth::user()
+            )
+        );
         return response()->baseResponseStatusCreated([
             'token' => $token,
             'token_type' => 'Bearer'
