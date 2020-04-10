@@ -15,8 +15,10 @@ class FileController extends Controller
      */
     public function uploadFile(CSVFormRequest $request)
     {
-        $path = $request->file('csv')->getRealPath();
-        ReadFileJob::dispatch($path);
-        return response() -> baseResponseStatusCreated(trans('messages.up_load_file_success'));
+        $path = Storage::putFile('files', $request->file('csv'));
+        
+        ReadFileJob::dispatch(storage_path('app/' . $path), 0);
+
+        return response()->baseResponseStatusCreated(trans('messages.up_load_file_success'));
     }
 }
