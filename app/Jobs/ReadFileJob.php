@@ -5,6 +5,7 @@ namespace App\Jobs;
 use App\CSV;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Foundation\Bus\Dispatchable;
+use Illuminate\Support\Facades\Log;
 use League\Csv\Reader;
 use League\Csv\Statement;
 
@@ -12,8 +13,9 @@ class ReadFileJob implements ShouldQueue
 {
     use Dispatchable;
 
-    private $path;
-    private $offset;
+    protected $path;
+    protected $offset;
+    private $limit = 5000;
 
     /**
      * Create a new job instance.
@@ -34,27 +36,26 @@ class ReadFileJob implements ShouldQueue
     public function handle()
     {
         $reader = Reader::createFromPath($this->path, 'r');
-
-        if ($this->offset == 0) $reader->setHeaderOffset(0);
+        $reader->setHeaderOffset(0);
 
         $stmt = (new Statement())
             ->offset($this->offset)
-            ->limit(200);
+            ->limit($this->limit);
 
         $records = $stmt->process($reader);
 
-        if ($records->count() < 200) {
+        if ($records->count() == 0) {
+            unlink($this->path);
             // Import data csv success
             return;
         }
-
         $csvs = [];
         foreach ($records as $record) {
-            array_push($csvs, $record);
+            $csvs[] = $record;
         }
         CSV::insert($csvs);
 
-        $nextOffset = $this->offset + 200;
-        ReadFileJob::dispatch($this->path, $nextOffset);
+        $this->offset += $this->limit;
+        dispatch($this);
     }
 }
