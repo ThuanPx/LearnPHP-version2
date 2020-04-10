@@ -10,5 +10,6 @@ return [
     'you_not_admin' => 'You not Admin',
     'delete_user_success' => 'Detele user success',
     'logout_success' => 'Logout success',
-    'thank_you_use_app' => 'Thank you for using our application!'
+    'thank_you_use_app' => 'Thank you for using our application!',
+    'up_load_file_success' => 'Upload file success!'
 ];
