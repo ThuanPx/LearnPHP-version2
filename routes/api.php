@@ -33,5 +33,13 @@ Route::group(['middleware' => ['auth']], function () {
 
     Route::get('logout', 'LogoutController@logout');
 
-    Route::post('upload-file', 'FileController@uploadFile');
+    Route::post('files', 'FileController@uploadFile');
+
+    Route::resources([
+        'posts' => 'PostController',
+        'comments' => 'CommentController'
+    ]);
+
+    Route::get('reply-comment/{comment_id}', 'CommentController@replyComment');
+
 });

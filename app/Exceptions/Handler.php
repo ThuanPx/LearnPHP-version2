@@ -58,7 +58,7 @@ class Handler extends ExceptionHandler
     {
         if ($request->is('api/*')) {
             $statusCode = JsonResponse::HTTP_UNPROCESSABLE_ENTITY;
-            $messageError = '';
+            $messageError = $exception->getMessage();
             $errors = '';
             if ($exception instanceof ValidationException) {
                 $messageError = $exception->getMessage();
