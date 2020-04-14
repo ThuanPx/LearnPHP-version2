@@ -32,4 +32,6 @@ Route::group(['middleware' => ['auth']], function () {
     );
 
     Route::get('logout', 'LogoutController@logout');
+
+    Route::post('upload-file', 'FileController@uploadFile');
 });

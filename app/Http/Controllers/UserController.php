@@ -18,9 +18,11 @@ class UserController extends Controller
     {
         /** @var \Illuminate\Database\Eloquent\Model */
         $user = Auth::user();
+
         if ($user->cant('viewAny', $user)) {
             return response()->baseResponseError(trans('messages.you_not_admin'));
         }
+
         return response()->baseResponse(['user' => $user->email]);
     }
 
@@ -54,6 +56,7 @@ class UserController extends Controller
         if (Gate::denies('delete-user', Auth::user())) {
             return response()->baseResponseError(trans('messages.you_not_admin'));
         }
+
         return response()->baseResponse(['message' => 'messages.delete_user_success']);
     }
 }
