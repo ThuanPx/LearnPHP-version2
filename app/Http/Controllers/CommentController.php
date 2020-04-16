@@ -49,7 +49,7 @@ class CommentController extends Controller
      * @param  int  $parent_id
      * @return \Illuminate\Http\Response
      */
-    public function replyComment(Request $request, $parent_id)
+    public function replyComment(Request $request)
     {
         $comment = new Comment();
         $comment->content = $request->content;
