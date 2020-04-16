@@ -2,8 +2,6 @@
 
 namespace App\Traits;
 
-use App\Image;
-use App\Post;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
@@ -21,7 +19,9 @@ trait ImageTrait
     {
         $images = $request->file('images');
         $imageModels = [];
-        if (!isset($images)) return $imageModels;
+        if (!isset($images)) {
+            return $imageModels;
+        }
         foreach ($images as $image) {
             $path = Storage::putFile('images', $image);
             $imageModels[] = [
@@ -32,6 +32,7 @@ trait ImageTrait
                 'updated_at' => now()
             ];
         }
+
         return $imageModels;
     }
 }

@@ -26,11 +26,8 @@ class CommentFormRequest extends FormRequest
     {
         return [
             'content' => 'string | max: 2000',
-            'images.*' => 'mimes:jpeg,jpg,png | max:1000',
-            'parent_id' => 'integer',
-            'type' => [
-                'required',  Rule::in(['post', 'comment']),
-            ],
+            'images.*' => 'mimes:jpeg,png,jpg | max:1000',
+            'parent_id' => 'integer'
         ];
     }
 }

@@ -40,6 +40,8 @@ Route::group(['middleware' => ['auth']], function () {
         'comments' => 'CommentController'
     ]);
 
-    Route::get('reply-comment/{comment_id}', 'CommentController@replyComment');
+    Route::get('reply-comment/{comment_id}', 'CommentController@getReplyComment');
+
+    Route::post('reply-comment/{comment_id}', 'CommentController@replyComment');
 
 });

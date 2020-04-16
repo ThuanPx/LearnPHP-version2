@@ -20,6 +20,7 @@ trait PostTrait
         if (!isset($post)) {
             throw new Exception(trans('messages.post_not_found'), JsonResponse::HTTP_BAD_REQUEST);
         }
+        
         return $post;
     }
 }

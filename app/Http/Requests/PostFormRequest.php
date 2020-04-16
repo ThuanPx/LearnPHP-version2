@@ -25,7 +25,7 @@ class PostFormRequest extends FormRequest
     {
         return [
             'content' => 'string | max: 2000',
-            'images.*' => 'mimes:jpeg,jpg,png | max:1000'
+            'images.*' => 'mimes:jpeg,png,jpg | max:1000'
         ];
     }
 }

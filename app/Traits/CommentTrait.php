@@ -20,6 +20,7 @@ trait CommentTrait
         if (!isset($post)) {
             throw new Exception(trans('messages.comment_not_found'), JsonResponse::HTTP_BAD_REQUEST);
         }
+        
         return $post;
     }
 }
