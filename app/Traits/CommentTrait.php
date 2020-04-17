@@ -11,16 +11,17 @@ trait CommentTrait
     /**
      * Get instance comment
      *
-     * @param  \Illuminate\Http\Request  $request
+     * @param  int $userId
+     * @param int $id
      * @return \App\Comment
      */
     private function getComment($userId, $id)
     {
-        $post = Comment::whereUserId($userId)->whereId($id)->first();
-        if (!isset($post)) {
+        $comment = Comment::whereUserId($userId)->whereId($id)->first();
+        if (!isset($comment)) {
             throw new Exception(trans('messages.comment_not_found'), JsonResponse::HTTP_BAD_REQUEST);
         }
-        
-        return $post;
+
+        return $comment;
     }
 }

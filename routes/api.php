@@ -35,13 +35,15 @@ Route::group(['middleware' => ['auth']], function () {
 
     Route::post('files', 'FileController@uploadFile');
 
-    Route::resources([
+    Route::apiResources([
         'posts' => 'PostController',
         'comments' => 'CommentController'
     ]);
 
+    // get all reply comment
     Route::get('reply-comment/{comment_id}', 'CommentController@getReplyComment');
 
-    Route::post('reply-comment/{comment_id}', 'CommentController@replyComment');
+    // reply comment
+    Route::post('reply-comment', 'CommentController@replyComment');
 
 });

@@ -4,8 +4,9 @@ namespace App\Http\Controllers;
 
 use App\Comment;
 use App\Http\Requests\CommentFormRequest;
-use App\Http\Resources\ReplyCommentResource;
+use App\Http\Resources\CommentResource;
 use App\Image;
+use App\Post;
 use App\Traits\CommentTrait;
 use App\Traits\PostTrait;
 use Illuminate\Http\Request;
@@ -19,21 +20,24 @@ class CommentController extends Controller
     /**
      * Create comment
      *
-     * @param  \Illuminate\Http\Request  $request
+     * @param  \App\Http\Requests\CommentFormRequest $request
      * @return \Illuminate\Http\Response
      */
     public function store(CommentFormRequest $request)
     {
-        $comment = new Comment();
-        $comment->content = $request->content;
-        $comment->user_id = $request->user()->id;
+        Post::findOrFail($request->postId);
 
-        DB::transaction(function () use ($request, $comment) {
-            $post = $this->getPost($request->user()->id, $request->parent_id);
-            $post->comments()->save($comment);
+        $data = $request->validated();
+        $data['user_id'] = $request->user()->id;
+        $data['commentable_id'] = $request->postId;
+        $data['commentable_type'] = Post::class;
+
+        DB::transaction(function () use ($request, $data) {
+            $comment = Comment::create($data);
 
             $imageModels = $this->createImageModels($request, $comment);
-            if (isset($imageModels)) {
+
+            if (!empty($imageModels)) {
                 Image::insert($imageModels);
             }
         });
@@ -46,21 +50,23 @@ class CommentController extends Controller
     /**
      * Create reply comment
      *
-     * @param  int  $parent_id
+     * @param  \App\Http\Requests\CommentFormRequest $request
      * @return \Illuminate\Http\Response
      */
-    public function replyComment(Request $request)
+    public function replyComment(CommentFormRequest $request)
     {
-        $comment = new Comment();
-        $comment->content = $request->content;
-        $comment->user_id = $request->user()->id;
+        Comment::findOrFail($request->commentId);
 
-        DB::transaction(function () use ($request, $comment) {
-            $commentParent = $this->getComment($request->user()->id, $request->parent_id);
-            $commentParent->comments()->save($comment);
+        $data = $request->validated();
+        $data['user_id'] = $request->user()->id;
+        $data['commentable_id'] = $request->commentId;
+        $data['commentable_type'] = Comment::class;
+
+        DB::transaction(function () use ($request, $data) {
+            $comment = Comment::create($data);
 
             $imageModels = $this->createImageModels($request, $comment);
-            if (isset($imageModels)) {
+            if (!empty($imageModels)) {
                 Image::insert($imageModels);
             }
         });
@@ -73,37 +79,37 @@ class CommentController extends Controller
     /**
      * Get all reply comment
      *
-     * @param  int  $parent_id
-     * @return \Illuminate\Http\Response
+     * @param  int  $commentId
+     * @return \Illuminate\Http\Resources\Json\JsonResource::collection
      */
-    public function getReplyComment(Request $request, $parent_id)
+    public function getReplyComment($commentId)
     {
-        $comments = $this->getComment($request->user()->id, $parent_id)
+        $comments = Comment::with('images')
+            ->findOrFail($commentId)
             ->comments()
-            ->orderBy('created_at', 'desc')
             ->get();
 
-        return ReplyCommentResource::collection($comments);
+        return CommentResource::collection($comments);
     }
 
     /**
      * Update the specified resource in storage.
      *
-     * @param  \Illuminate\Http\Request  $request
-     * @param  int  $parent_id
+     * @param  \App\Http\Requests\CommentFormRequest  $request
+     * @param  int  $commentId
      * @return \Illuminate\Http\Response
      */
-    public function update(Request $request, $parent_id)
+    public function update(CommentFormRequest $request, $commentId)
     {
-        $comment = $this->getComment($request->user()->id, $parent_id);
-        $comment->content = $request->content;
+        $comment = $this->getComment($request->user()->id, $commentId);
 
         DB::transaction(function () use ($request, $comment) {
+            $comment->content = $request->content;
             $comment->save();
             $comment->images()->delete();
 
             $imageModels = $this->createImageModels($request, $comment);
-            if (isset($imageModels)) {
+            if (!empty($imageModels)) {
                 Image::insert($imageModels);
             }
         });
@@ -116,12 +122,12 @@ class CommentController extends Controller
     /**
      * Remove the specified resource from storage.
      *
-     * @param  int  $parent_id
+     * @param  int  $parentId
      * @return \Illuminate\Http\Response
      */
-    public function destroy(Request $request, $parent_id)
+    public function destroy(Request $request, $parentId)
     {
-        $comment = $this->getComment($request->user()->id, $parent_id);
+        $comment = $this->getComment($request->user()->id, $parentId);
         $comment->delete();
 
         return response()->baseResponse([

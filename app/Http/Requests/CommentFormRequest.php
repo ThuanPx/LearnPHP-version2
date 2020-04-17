@@ -27,7 +27,8 @@ class CommentFormRequest extends FormRequest
         return [
             'content' => 'string | max: 2000',
             'images.*' => 'mimes:jpeg,png,jpg | max:1000',
-            'parent_id' => 'integer'
+            'postId' => 'integer | exists:posts,id',
+            'commentId' => 'integer | exists:comments,id'
         ];
     }
 }

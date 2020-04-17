@@ -13,14 +13,22 @@ class PostResource extends JsonResource
      */
     public function toArray($request)
     {
-        return [
-            'id' => $this->id,
-            'user_id' => $this->user_id,
-            'content' => $this->content,
-            'created_at' => $this->created_at,
-            'updated_at' => $this->updated_at,
-            'comments' => CommentResource::collection($this->comments()->orderBy('created_at', 'desc')->get()),
-            'images' => ImageResource::collection($this->images()->orderBy('created_at', 'desc')->get()),
-        ];
+        $data = $this->resource->only([
+            'id',
+            'user_id',
+            'content',
+            'created_at',
+            'updated_at'
+        ]);
+
+        $data['comments'] = CommentResource::collection(
+            $this->whenLoaded('comments')
+        );
+
+        $data['images'] = ImageResource::collection(
+            $this->whenLoaded('images')
+        );
+
+        return $data;
     }
 }

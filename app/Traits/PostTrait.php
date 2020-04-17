@@ -11,7 +11,8 @@ trait PostTrait
     /**
      * Get instance post
      *
-     * @param  \Illuminate\Http\Request  $request
+     * @param  int $userId
+     * @param int $id
      * @return \App\Post
      */
     private function getPost($userId, $id)
@@ -20,7 +21,7 @@ trait PostTrait
         if (!isset($post)) {
             throw new Exception(trans('messages.post_not_found'), JsonResponse::HTTP_BAD_REQUEST);
         }
-        
+
         return $post;
     }
 }

@@ -17,34 +17,33 @@ class PostController extends Controller
     /**
      * Display a listing of the resource.
      *
-     * @return \Illuminate\Http\Response
+     * @return \Illuminate\Http\Resources\Json\AnonymousResourceCollection
      */
     public function index(Request $request)
     {
-        $posts = $request->user()->posts()
+        $posts = Post::with(['comments', 'images', 'comments.comments'])
             ->orderBy('created_at', 'desc')
-            ->get();
-            
+            ->paginate($request->input('page', 2));
+
         return PostResource::collection($posts);
     }
 
     /**
      * Store a newly created resource in storage.
      *
-     * @param  \Illuminate\Http\Request  $request
+     * @param  \App\Http\Requests\PostFormRequest  $request
      * @return \Illuminate\Http\Response
      */
     public function store(PostFormRequest $request)
     {
-        $post = new Post();
-        $post->content = $request->content;
-        $post->user_id = $request->user()->id;
+        $data = $request->validated();
 
-        DB::transaction(function () use ($request, $post) {
-            $post->save();
+        DB::transaction(function () use ($request, $data) {
+            $data['user_id'] = $request->user()->id;
+            $post =  Post::create($data);
 
             $imageModels = $this->createImageModels($request, $post);
-            if (isset($imageModels)) {
+            if (!empty($imageModels)) {
                 Image::insert($imageModels);
             }
         });
@@ -57,12 +56,12 @@ class PostController extends Controller
     /**
      * Display the specified resource.
      *
-     * @param  int  $post_id
-     * @return \Illuminate\Http\Response
+     * @param  int  $postId
+     * @return \App\Http\Resources\PostResource
      */
-    public function show(Request $request, $post_id)
+    public function show($postId)
     {
-        $post = $this->getPost($request->user()->id, $post_id);
+        $post = Post::with(['comments','comments.comments', 'images'])->findOrFail($postId);
 
         return new PostResource($post);
     }
@@ -70,21 +69,21 @@ class PostController extends Controller
     /**
      * Update the specified resource in storage.
      *
-     * @param  \Illuminate\Http\Request  $request
-     * @param  int  $post_id
+     * @param  \App\Http\Requests\PostFormRequest  $request
+     * @param  int  $postId
      * @return \Illuminate\Http\Response
      */
-    public function update(PostFormRequest $request, $post_id)
+    public function update(PostFormRequest $request, $postId)
     {
-        $post = $this->getPost($request->user()->id, $post_id);
-        $post->content = $request->content;
+        $post = $this->getPost($request->user()->id, $postId);
 
         DB::transaction(function () use ($request, $post) {
+            $post->content = $request->content;
             $post->save();
             $post->images()->delete();
 
             $imageModels = $this->createImageModels($request, $post);
-            if (isset($imageModels)) {
+            if (!empty($imageModels)) {
                 Image::insert($imageModels);
             }
         });
@@ -97,12 +96,13 @@ class PostController extends Controller
     /**
      * Remove the specified resource from storage.
      *
-     * @param  int  $post_id
+     * @param  \Illuminate\Http\Request $request
+     * @param  int  $postId
      * @return \Illuminate\Http\Response
      */
-    public function destroy(Request $request, $post_id)
+    public function destroy(Request $request, $postId)
     {
-        $post = $this->getPost($request, $post_id);
+        $post = $this->getPost($request->user()->id, $postId);
         $post->delete();
 
         return response()->baseResponse([

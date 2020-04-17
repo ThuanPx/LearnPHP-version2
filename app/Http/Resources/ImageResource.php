@@ -13,11 +13,11 @@ class ImageResource extends JsonResource
      */
     public function toArray($request)
     {
-         return [
-            'id' => $this->id,
-            'url' => $this->url,
-            'created_at' => $this->created_at,
-            'updated_at' => $this->updated_at,
-         ];
+        return $this->resource->only([
+            'id',
+            'url',
+            'created_at',
+            'updated_at',
+        ]);
     }
 }

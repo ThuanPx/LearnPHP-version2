@@ -12,7 +12,7 @@ class UserController extends Controller
     /**
      * Function get user
      *
-     * @return JsonResponse user email
+     * @return \Illuminate\Http\Response
      */
     public function getUser()
     {
@@ -29,7 +29,8 @@ class UserController extends Controller
     /**
      * Function edit user
      *
-     * @return JsonResponse user id
+     * @param int $id
+     * @return \Illuminate\Http\Response
      */
     public function editUserId($id)
     {
@@ -39,7 +40,8 @@ class UserController extends Controller
     /**
      * Function create user
      *
-     * @return JsonResponse user
+     * @param \App\Http\Requests\UserFormRequest $request
+     * @return \Illuminate\Http\Response
      */
     public function createUser(UserFormRequest $request)
     {
@@ -49,7 +51,7 @@ class UserController extends Controller
     /**
      * Function delete user
      *
-     * @return JsonResponse
+     * @return \Illuminate\Http\Response
      */
     public function deleteUser()
     {
