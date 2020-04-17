@@ -42,10 +42,7 @@ class AppServiceProvider extends ServiceProvider
             'baseResponse',
             function ($data, $statusCode = JsonResponse::HTTP_OK) {
                 return Response::json(
-                    [
-                        'status_code' => $statusCode,
-                        'data' => $data,
-                    ],
+                    $data,
                     $statusCode
                 );
             }
@@ -55,10 +52,7 @@ class AppServiceProvider extends ServiceProvider
             'baseResponseStatusCreated',
             function ($data) {
                 return Response::json(
-                    [
-                        'status_code' => JsonResponse::HTTP_CREATED,
-                        'data' => $data,
-                    ],
+                    $data,
                     JsonResponse::HTTP_CREATED
                 );
             }

@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Comment;
 use App\Http\Requests\CommentFormRequest;
+use App\Http\Resources\CommentCollection;
 use App\Http\Resources\CommentResource;
 use App\Image;
 use App\Post;
@@ -11,6 +12,7 @@ use App\Traits\CommentTrait;
 use App\Traits\PostTrait;
 use Illuminate\Http\Request;
 use App\Traits\ImageTrait;
+use Illuminate\Http\JsonResponse;
 use Illuminate\Support\Facades\DB;
 
 class CommentController extends Controller
@@ -27,24 +29,24 @@ class CommentController extends Controller
     {
         Post::findOrFail($request->postId);
 
-        $data = $request->validated();
-        $data['user_id'] = $request->user()->id;
-        $data['commentable_id'] = $request->postId;
-        $data['commentable_type'] = Post::class;
-
-        DB::transaction(function () use ($request, $data) {
-            $comment = Comment::create($data);
+        $comment = DB::transaction(function () use ($request) {
+            $comment = new Comment($request->validated());
+            $comment['user_id'] = $request->user()->id;
+            $comment['commentable_id'] = $request->postId;
+            $comment['commentable_type'] = Post::class;
+            $comment->save();
 
             $imageModels = $this->createImageModels($request, $comment);
-
             if (!empty($imageModels)) {
                 Image::insert($imageModels);
             }
+
+            return $comment;
         });
 
-        return response()->baseResponseStatusCreated([
-            'message' => trans('messages.create_comment_success')
-        ]);
+        return response()->baseResponseStatusCreated(
+            new CommentResource($comment)
+        );
     }
 
     /**
@@ -57,23 +59,23 @@ class CommentController extends Controller
     {
         Comment::findOrFail($request->commentId);
 
-        $data = $request->validated();
-        $data['user_id'] = $request->user()->id;
-        $data['commentable_id'] = $request->commentId;
-        $data['commentable_type'] = Comment::class;
-
-        DB::transaction(function () use ($request, $data) {
-            $comment = Comment::create($data);
+        $comment = DB::transaction(function () use ($request) {
+            $comment = new Comment($request->validated());
+            $comment['user_id'] = $request->user()->id;
+            $comment['commentable_id'] = $request->commentId;
+            $comment['commentable_type'] = Comment::class;
+            $comment->save();
 
             $imageModels = $this->createImageModels($request, $comment);
             if (!empty($imageModels)) {
                 Image::insert($imageModels);
             }
+            return $comment;
         });
 
-        return response()->baseResponseStatusCreated([
-            'message' => trans('messages.create_comment_success')
-        ]);
+        return response()->baseResponseStatusCreated(
+            new CommentResource($comment)
+        );
     }
 
     /**
@@ -89,7 +91,9 @@ class CommentController extends Controller
             ->comments()
             ->get();
 
-        return CommentResource::collection($comments);
+        return response()->baseResponseStatusCreated([
+            new CommentCollection($comments)
+        ]);
     }
 
     /**
@@ -103,8 +107,8 @@ class CommentController extends Controller
     {
         $comment = $this->getComment($request->user()->id, $commentId);
 
-        DB::transaction(function () use ($request, $comment) {
-            $comment->content = $request->content;
+        $commentUpdate =  DB::transaction(function () use ($request, $comment) {
+            $comment['content'] = $request->content;
             $comment->save();
             $comment->images()->delete();
 
@@ -112,10 +116,11 @@ class CommentController extends Controller
             if (!empty($imageModels)) {
                 Image::insert($imageModels);
             }
+            return $comment;
         });
 
         return response()->baseResponseStatusCreated([
-            'message' => trans('messages.update_comment_success')
+            new CommentResource($commentUpdate)
         ]);
     }
 
@@ -130,8 +135,6 @@ class CommentController extends Controller
         $comment = $this->getComment($request->user()->id, $parentId);
         $comment->delete();
 
-        return response()->baseResponse([
-            'message' => trans('messages.delete_comment_success')
-        ]);
+        return response()->baseResponse(null, JsonResponse::HTTP_NO_CONTENT);
     }
 }

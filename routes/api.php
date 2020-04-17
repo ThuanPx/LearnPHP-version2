@@ -41,9 +41,12 @@ Route::group(['middleware' => ['auth']], function () {
     ]);
 
     // get all reply comment
-    Route::get('reply-comment/{comment_id}', 'CommentController@getReplyComment');
+    Route::get('comments/{comment_id}/reply-comment', 'CommentController@getReplyComment');
 
     // reply comment
     Route::post('reply-comment', 'CommentController@replyComment');
+
+    // get all post in date
+    Route::get('posts/{date}/comments','PostController@getPostInDate');
 
 });

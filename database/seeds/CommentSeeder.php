@@ -1,9 +1,6 @@
 <?php
 
 use Illuminate\Database\Seeder;
-use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Facades\Log;
-use Illuminate\Support\Str;
 
 class CommentSeeder extends Seeder
 {
@@ -14,6 +11,6 @@ class CommentSeeder extends Seeder
      */
     public function run()
     {
-        factory(App\Comment::class, 2)->create();
+        factory(App\Comment::class, 1)->create();
     }
 }

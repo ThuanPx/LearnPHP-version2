@@ -10,6 +10,7 @@ class CommentResource extends JsonResource
      * Transform the resource into an array.
      *
      * @return array
+     * @SuppressWarnings(PHPMD.UnusedFormalParameter)
      */
     public function toArray($request)
     {

@@ -3,11 +3,14 @@
 namespace App\Http\Controllers;
 
 use App\Http\Requests\PostFormRequest;
+use App\Http\Resources\PostCollection;
 use App\Http\Resources\PostResource;
 use App\Image;
 use App\Post;
 use App\Traits\ImageTrait;
 use App\Traits\PostTrait;
+use Carbon\Carbon;
+use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 
@@ -19,13 +22,15 @@ class PostController extends Controller
      *
      * @return \Illuminate\Http\Resources\Json\AnonymousResourceCollection
      */
-    public function index(Request $request)
+    public function index()
     {
         $posts = Post::with(['comments', 'images', 'comments.comments'])
             ->orderBy('created_at', 'desc')
-            ->paginate($request->input('page', 2));
+            ->paginate(2);
 
-        return PostResource::collection($posts);
+        return response()->baseResponse(
+            new PostCollection($posts)
+        );
     }
 
     /**
@@ -36,21 +41,22 @@ class PostController extends Controller
      */
     public function store(PostFormRequest $request)
     {
-        $data = $request->validated();
-
-        DB::transaction(function () use ($request, $data) {
-            $data['user_id'] = $request->user()->id;
-            $post =  Post::create($data);
+        $post = DB::transaction(function () use ($request) {
+            $post = new Post($request->validated());
+            $post['user_id'] = $request->user()->id;
+            $post->save();
 
             $imageModels = $this->createImageModels($request, $post);
             if (!empty($imageModels)) {
                 Image::insert($imageModels);
             }
+
+            return $post;
         });
 
-        return response()->baseResponseStatusCreated([
-            'message' => trans('messages.create_post_success')
-        ]);
+        return response()->baseResponseStatusCreated(
+            new PostResource($post)
+        );
     }
 
     /**
@@ -61,9 +67,12 @@ class PostController extends Controller
      */
     public function show($postId)
     {
-        $post = Post::with(['comments','comments.comments', 'images'])->findOrFail($postId);
+        $post = Post::with(['comments', 'comments.comments', 'images'])
+            ->findOrFail($postId);
 
-        return new PostResource($post);
+        return response()->baseResponse(
+            new PostResource($post)
+        );
     }
 
     /**
@@ -77,7 +86,7 @@ class PostController extends Controller
     {
         $post = $this->getPost($request->user()->id, $postId);
 
-        DB::transaction(function () use ($request, $post) {
+        $postUpdate = DB::transaction(function () use ($request, $post) {
             $post->content = $request->content;
             $post->save();
             $post->images()->delete();
@@ -86,11 +95,13 @@ class PostController extends Controller
             if (!empty($imageModels)) {
                 Image::insert($imageModels);
             }
+
+            return $post;
         });
 
-        return response()->baseResponseStatusCreated([
-            'message' => trans('messages.edit_post_success')
-        ]);
+        return response()->baseResponseStatusCreated(
+            new PostResource($postUpdate)
+        );
     }
 
     /**
@@ -105,8 +116,22 @@ class PostController extends Controller
         $post = $this->getPost($request->user()->id, $postId);
         $post->delete();
 
+        return response()->baseResponse(null, JsonResponse::HTTP_NO_CONTENT);
+    }
+
+    public function getPostInDate(Request $request, $date)
+    {
+        $dateParse = Carbon::parse($date);
+
+        $posts = Post::with(['comments', 'images', 'comments.comments'])
+            ->whereHas('comments', function ($query) use ($request, $dateParse) {
+                return $query->whereUserId($request->user()->id)
+                    ->whereDate('created_at', $dateParse);
+            })
+            ->get();
+
         return response()->baseResponse([
-            'message' => trans('messages.delete_post_success')
+            'data' =>  PostResource::collection($posts)
         ]);
     }
 }
