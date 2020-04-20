@@ -4,6 +4,8 @@ namespace App\Http\Controllers;
 
 use App\Comment;
 use App\Http\Requests\CommentFormRequest;
+use App\Http\Requests\CreateCommentFormRequest;
+use App\Http\Requests\CreateReplyCommentFormRequest;
 use App\Http\Resources\CommentCollection;
 use App\Http\Resources\CommentResource;
 use App\Image;
@@ -22,19 +24,20 @@ class CommentController extends Controller
     /**
      * Create comment
      *
-     * @param  \App\Http\Requests\CommentFormRequest $request
+     * @param  \App\Http\Requests\CreateCommentFormRequest $request
      * @return \Illuminate\Http\Response
      */
-    public function store(CommentFormRequest $request)
+    public function store(CreateCommentFormRequest $request)
     {
-        Post::findOrFail($request->postId);
-
         $comment = DB::transaction(function () use ($request) {
-            $comment = new Comment($request->validated());
-            $comment['user_id'] = $request->user()->id;
-            $comment['commentable_id'] = $request->postId;
-            $comment['commentable_type'] = Post::class;
-            $comment->save();
+            $comment = Comment::create(
+                [
+                    'content' => $request->content,
+                    'user_id' => $request->user()->id,
+                    'commentable_id' => $request->postId,
+                    'commentable_type' => Post::class,
+                ]
+            );
 
             $imageModels = $this->createImageModels($request, $comment);
             if (!empty($imageModels)) {
@@ -52,19 +55,20 @@ class CommentController extends Controller
     /**
      * Create reply comment
      *
-     * @param  \App\Http\Requests\CommentFormRequest $request
+     * @param  \App\Http\Requests\CreateReplyCommentFormRequest $request
      * @return \Illuminate\Http\Response
      */
-    public function replyComment(CommentFormRequest $request)
+    public function replyComment(CreateReplyCommentFormRequest $request)
     {
-        Comment::findOrFail($request->commentId);
-
         $comment = DB::transaction(function () use ($request) {
-            $comment = new Comment($request->validated());
-            $comment['user_id'] = $request->user()->id;
-            $comment['commentable_id'] = $request->commentId;
-            $comment['commentable_type'] = Comment::class;
-            $comment->save();
+            $comment = Comment::create(
+                [
+                    'content' => $request->content,
+                    'user_id' => $request->user()->id,
+                    'commentable_id' => $request->commentId,
+                    'commentable_type' => Comment::class,
+                ]
+            );
 
             $imageModels = $this->createImageModels($request, $comment);
             if (!empty($imageModels)) {
@@ -89,7 +93,8 @@ class CommentController extends Controller
         $comments = Comment::with('images')
             ->findOrFail($commentId)
             ->comments()
-            ->get();
+            ->orderBy('created_at', 'desc')
+            ->paginate(2);
 
         return response()->baseResponseStatusCreated([
             new CommentCollection($comments)
@@ -108,8 +113,7 @@ class CommentController extends Controller
         $comment = $this->getComment($request->user()->id, $commentId);
 
         $commentUpdate =  DB::transaction(function () use ($request, $comment) {
-            $comment['content'] = $request->content;
-            $comment->save();
+            $comment->fill(['content' => $request->content]);
             $comment->images()->delete();
 
             $imageModels = $this->createImageModels($request, $comment);

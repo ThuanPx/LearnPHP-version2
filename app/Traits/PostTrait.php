@@ -19,10 +19,7 @@ trait PostTrait
     private function getPost($userId, $postId)
     {
         $post = User::findOrFail($userId)->posts()->findOrFail($postId);
-        if (!isset($post)) {
-            throw new Exception(trans('messages.post_not_found'), JsonResponse::HTTP_BAD_REQUEST);
-        }
 
-        return Post::findOrFail($postId);
+        return $post;
     }
 }

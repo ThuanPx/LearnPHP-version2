@@ -19,9 +19,6 @@ trait CommentTrait
     private function getComment($userId, $commentId)
     {
         $comment = User::findOrFail($userId)->comments()->findOrFail($commentId);
-        if (!isset($comment)) {
-            throw new Exception(trans('messages.comment_not_found'), JsonResponse::HTTP_BAD_REQUEST);
-        }
 
         return $comment;
     }

@@ -10,7 +10,5 @@ $factory->define(Image::class, function (Faker $faker) {
     $image = array_rand(Storage::allFiles('images'));
     return [
         'url' => storage_path('app/' . $image),
-        'imageable_id' => factory(App\Post::class),
-        'imageable_type' => App\Post::class
     ];
 });

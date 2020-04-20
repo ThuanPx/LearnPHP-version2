@@ -42,9 +42,10 @@ class PostController extends Controller
     public function store(PostFormRequest $request)
     {
         $post = DB::transaction(function () use ($request) {
-            $post = new Post($request->validated());
-            $post['user_id'] = $request->user()->id;
-            $post->save();
+            $post = Post::create([
+                'content' => $request->content,
+                'user_id' => $request->user()->id
+            ]);
 
             $imageModels = $this->createImageModels($request, $post);
             if (!empty($imageModels)) {
@@ -87,8 +88,7 @@ class PostController extends Controller
         $post = $this->getPost($request->user()->id, $postId);
 
         $postUpdate = DB::transaction(function () use ($request, $post) {
-            $post->content = $request->content;
-            $post->save();
+            $post->fill(['content' => $request->content]);
             $post->images()->delete();
 
             $imageModels = $this->createImageModels($request, $post);
@@ -130,8 +130,10 @@ class PostController extends Controller
             })
             ->get();
 
-        return response()->baseResponse([
-            'data' =>  PostResource::collection($posts)
-        ]);
+        return response()->baseResponse(
+            [
+                'data' => PostResource::collection($posts)
+            ]
+        );
     }
 }
