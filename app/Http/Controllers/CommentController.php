@@ -6,14 +6,15 @@ use App\Comment;
 use App\Http\Requests\CommentFormRequest;
 use App\Http\Requests\CreateCommentFormRequest;
 use App\Http\Requests\CreateReplyCommentFormRequest;
+use App\Http\Requests\GetRepliesFormRequest;
 use App\Http\Resources\CommentCollection;
 use App\Http\Resources\CommentResource;
 use App\Image;
 use App\Post;
 use App\Traits\CommentTrait;
 use App\Traits\PostTrait;
-use Illuminate\Http\Request;
 use App\Traits\ImageTrait;
+use Composer\DependencyResolver\Request;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Support\Facades\DB;
 
@@ -85,16 +86,15 @@ class CommentController extends Controller
     /**
      * Get all reply comment
      *
-     * @param  int  $commentId
+     * @param  \App\Http\Requests\GetRepliesFormRequest  $request
      * @return \Illuminate\Http\Resources\Json\JsonResource::collection
      */
-    public function getReplyComment($commentId)
+    public function getRepliesOfComment(GetRepliesFormRequest $request)
     {
         $comments = Comment::with('images')
-            ->findOrFail($commentId)
-            ->comments()
+            ->whereCommentableId($request->commentId)
             ->orderBy('created_at', 'desc')
-            ->paginate(2);
+            ->paginate(10);
 
         return response()->baseResponseStatusCreated([
             new CommentCollection($comments)
@@ -105,15 +105,15 @@ class CommentController extends Controller
      * Update the specified resource in storage.
      *
      * @param  \App\Http\Requests\CommentFormRequest  $request
-     * @param  int  $commentId
      * @return \Illuminate\Http\Response
      */
-    public function update(CommentFormRequest $request, $commentId)
+    public function update(CommentFormRequest $request)
     {
-        $comment = $this->getComment($request->user()->id, $commentId);
+        $comment = Comment::with(['images'])->findOrFail($request->commentId);
 
         $commentUpdate =  DB::transaction(function () use ($request, $comment) {
-            $comment->fill(['content' => $request->content]);
+            $comment->fill($request->validated());
+            $comment->save();
             $comment->images()->delete();
 
             $imageModels = $this->createImageModels($request, $comment);
@@ -131,12 +131,12 @@ class CommentController extends Controller
     /**
      * Remove the specified resource from storage.
      *
-     * @param  int  $parentId
+     * @param  int  $commentId
      * @return \Illuminate\Http\Response
      */
-    public function destroy(Request $request, $parentId)
+    public function destroy($commentId)
     {
-        $comment = $this->getComment($request->user()->id, $parentId);
+        $comment = Comment::findOrFail($commentId);
         $comment->delete();
 
         return response()->baseResponse(null, JsonResponse::HTTP_NO_CONTENT);

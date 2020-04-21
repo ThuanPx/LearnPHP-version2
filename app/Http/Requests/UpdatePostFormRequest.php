@@ -3,9 +3,8 @@
 namespace App\Http\Requests;
 
 use Illuminate\Foundation\Http\FormRequest;
-use Illuminate\Validation\Rule;
 
-class CommentFormRequest extends FormRequest
+class UpdatePostFormRequest extends FormRequest
 {
     /**
      * Determine if the user is authorized to make this request.
@@ -27,8 +26,7 @@ class CommentFormRequest extends FormRequest
         return [
             'content' => 'string | max: 2000',
             'images.*' => 'mimes:jpeg,png,jpg | max:1000',
-            'postId' => 'exists:posts,id',
-            'commentId' => 'exists:comments,id'
+            'postId' => 'required | exists:posts,id'
         ];
     }
 
@@ -40,7 +38,7 @@ class CommentFormRequest extends FormRequest
     protected function prepareForValidation()
     {
         $this->merge([
-            'commentId' => $this->route('comment')
+            'postId' => $this->route('post')
         ]);
     }
 }

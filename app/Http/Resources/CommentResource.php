@@ -23,7 +23,7 @@ class CommentResource extends JsonResource
         ]);
 
         $data['reply_comments'] = CommentResource::collection(
-            $this->whenLoaded('comments')
+            $this->whenLoaded('replies')
         );
 
         $data['images'] = ImageResource::collection(

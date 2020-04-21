@@ -2,7 +2,9 @@
 
 namespace App\Http\Controllers;
 
+use App\Http\Requests\GetPostFormRequest;
 use App\Http\Requests\PostFormRequest;
+use App\Http\Requests\UpdatePostFormRequest;
 use App\Http\Resources\PostCollection;
 use App\Http\Resources\PostResource;
 use App\Image;
@@ -10,6 +12,7 @@ use App\Post;
 use App\Traits\ImageTrait;
 use App\Traits\PostTrait;
 use Carbon\Carbon;
+use Exception;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
@@ -24,7 +27,7 @@ class PostController extends Controller
      */
     public function index()
     {
-        $posts = Post::with(['comments', 'images', 'comments.comments'])
+        $posts = Post::with(['comments', 'images', 'comments.replies'])
             ->orderBy('created_at', 'desc')
             ->paginate(2);
 
@@ -63,13 +66,12 @@ class PostController extends Controller
     /**
      * Display the specified resource.
      *
-     * @param  int  $postId
      * @return \App\Http\Resources\PostResource
      */
-    public function show($postId)
+    public function show(GetPostFormRequest $request)
     {
-        $post = Post::with(['comments', 'comments.comments', 'images'])
-            ->findOrFail($postId);
+        $post = Post::with(['comments', 'comments.replies', 'images'])
+            ->findOrFail($request->postId);
 
         return response()->baseResponse(
             new PostResource($post)
@@ -79,16 +81,17 @@ class PostController extends Controller
     /**
      * Update the specified resource in storage.
      *
-     * @param  \App\Http\Requests\PostFormRequest  $request
-     * @param  int  $postId
+     * @param  \App\Http\Requests\UpdatePostFormRequest  $request
      * @return \Illuminate\Http\Response
      */
-    public function update(PostFormRequest $request, $postId)
+    public function update(UpdatePostFormRequest $request)
     {
-        $post = $this->getPost($request->user()->id, $postId);
+        $post = Post::with(['images'])
+            ->findOrFail($request->postId);
 
         $postUpdate = DB::transaction(function () use ($request, $post) {
-            $post->fill(['content' => $request->content]);
+            $post->fill($request->validated());
+            $post->save();
             $post->images()->delete();
 
             $imageModels = $this->createImageModels($request, $post);
@@ -107,13 +110,12 @@ class PostController extends Controller
     /**
      * Remove the specified resource from storage.
      *
-     * @param  \Illuminate\Http\Request $request
-     * @param  int  $postId
+     * @param  int $postId
      * @return \Illuminate\Http\Response
      */
-    public function destroy(Request $request, $postId)
+    public function destroy($postId)
     {
-        $post = $this->getPost($request->user()->id, $postId);
+        $post = Post::findOrFail($postId);
         $post->delete();
 
         return response()->baseResponse(null, JsonResponse::HTTP_NO_CONTENT);
@@ -123,7 +125,7 @@ class PostController extends Controller
     {
         $dateParse = Carbon::parse($date);
 
-        $posts = Post::with(['comments', 'images', 'comments.comments'])
+        $posts = Post::with(['comments', 'images', 'comments.replies'])
             ->whereHas('comments', function ($query) use ($request, $dateParse) {
                 return $query->whereUserId($request->user()->id)
                     ->whereDate('created_at', $dateParse);
@@ -131,9 +133,7 @@ class PostController extends Controller
             ->get();
 
         return response()->baseResponse(
-            [
-                'data' => PostResource::collection($posts)
-            ]
+            $posts
         );
     }
 }

@@ -34,7 +34,7 @@ class Comment extends Model
     /**
      * Get the comment
      */
-    public function comments()
+    public function replies()
     {
         return $this->morphMany(Comment::class, 'commentable');
     }

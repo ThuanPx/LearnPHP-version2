@@ -41,7 +41,7 @@ Route::group(['middleware' => ['auth']], function () {
     ]);
 
     // get all reply comment
-    Route::get('comments/{comment_id}/reply-comment', 'CommentController@getReplyComment');
+    Route::get('comments/{comment_id}/reply-comment', 'CommentController@getRepliesOfComment');
 
     // reply comment
     Route::post('reply-comment', 'CommentController@replyComment');
