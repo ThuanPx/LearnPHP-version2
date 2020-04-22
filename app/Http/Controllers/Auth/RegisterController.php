@@ -14,7 +14,7 @@ class RegisterController extends Controller
     /**
      * Function register sser
      *
-     * @return JsonResponse token
+     * @return \Illuminate\Http\Response
      */
     public function registerUser(RegisterFormRequest $request)
     {

@@ -10,7 +10,7 @@ class LogoutController extends Controller
     /**
      * Function logout
      *
-     * @return JsonResponse
+     * @return \Illuminate\Http\Response
      */
     public function logout()
     {

@@ -10,7 +10,7 @@ class FileController extends Controller
     /**
      * Function uploadFile
      *
-     * @return JsonResponse
+     * @return \Illuminate\Http\Response
      */
     public function uploadFile(CSVFormRequest $request)
     {

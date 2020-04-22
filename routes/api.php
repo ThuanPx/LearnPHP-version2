@@ -33,5 +33,20 @@ Route::group(['middleware' => ['auth']], function () {
 
     Route::get('logout', 'LogoutController@logout');
 
-    Route::post('upload-file', 'FileController@uploadFile');
+    Route::post('files', 'FileController@uploadFile');
+
+    Route::apiResources([
+        'posts' => 'PostController',
+        'comments' => 'CommentController'
+    ]);
+
+    // get all reply comment
+    Route::get('comments/{comment_id}/reply-comment', 'CommentController@getRepliesOfComment');
+
+    // reply comment
+    Route::post('reply-comment', 'CommentController@replyComment');
+
+    // get all post in date
+    Route::get('posts/{date}/comments','PostController@getPostInDate');
+
 });
